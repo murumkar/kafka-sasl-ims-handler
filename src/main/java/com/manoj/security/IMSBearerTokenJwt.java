@@ -1,4 +1,13 @@
-package com.adobe.ids.dim.security;
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2018 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
+ */
+
+package com.manoj.security;
 
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerToken;
 
@@ -15,20 +24,20 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
     private final Logger log = LoggerFactory.getLogger(IMSBearerTokenJwt.class);
 
     private String value;
-    private long lifetimeMs;
     private String principalName;
     private Long startTimeMs;
+    private long lifetimeMs;
     private Set<String> scope;
-    private long expirationTime;
+    private Long expirationTime;
 
 
     public IMSBearerTokenJwt(String accessToken, long lifeTime, long startTime){
         super();
         this.value = accessToken;
-        this.principalName= null;
-        this.lifetimeMs = lifeTime;
+        this.principalName = null;
         this.startTimeMs = startTime;
-        this.expirationTime = startTimeMs + lifetimeMs;
+        this.lifetimeMs = startTimeMs + lifeTime;
+        this.expirationTime = lifetimeMs;
     }
 
     public IMSBearerTokenJwt(Map<String, Object> jwtToken, String accessToken){
@@ -43,6 +52,7 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         if(this.scope == null){
             this.scope = new TreeSet<>();
         }
+
         if(jwtToken.get("scope") instanceof String ){
             this.scope.add((String) jwtToken.get("scope"));
         }else if(jwtToken.get("scope") instanceof List){
@@ -85,9 +95,9 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         return startTimeMs != null ? startTimeMs : 0;
     }
 
-    public long expirationTime() {  return expirationTime; }
+    public long expirationTime() {  return expirationTime != null ? expirationTime : 0; }
 
-    @Override
+   /** @Override
     public String toString() {
         return "IMSBearerTokenJwt{" +
                 "value='" + value + '\'' +
@@ -98,5 +108,6 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
                 ", expirationTime=" + expirationTime +
                 '}';
     }
+   */
 
 }

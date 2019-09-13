@@ -1,17 +1,13 @@
-/**
- *
- * https://docs.confluent.io/current/kafka/authentication_sasl/authentication_sasl_oauth.html
- *
- * Login Callback Handler for Token Retrieval
- * You must provide an implementation of org.apache.kafka.common.security.auth.AuthenticateCallbackHandler that handles
- * an instance of org.apache.kafka.common.security.oauthbearer.OAuthBearerTokenCallback. You can declare it using either
- * the sasl.login.callback.handler.class configuration option for a non-broker client, or using the prefixed
- * listener.name.sasl_ssl.oauthbearer.sasl.login.callback.handler.class configuration option for brokers (when SASL/OAUTHBEARER is
- * the inter-broker protocol).
+/*
+ * ADOBE CONFIDENTIAL. Copyright 2018 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
+ * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
+ * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
+ * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
+ * from Adobe Systems Incorporated.
  */
 
-
-package com.adobe.ids.dim.security;
+package com.manoj.security;
 
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
@@ -27,7 +23,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallbackHandler {
+public class    IMSAuthenticateLoginCallbackHandler implements AuthenticateCallbackHandler {
     private final Logger log = LoggerFactory.getLogger(IMSAuthenticateLoginCallbackHandler.class);
     private Map<String, String> moduleOptions = null;
     private boolean configured = false;
@@ -36,7 +32,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
     public void configure(Map<String, ?> map, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism))
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
-        if (Objects.requireNonNull(jaasConfigEntries).size() != 1 || jaasConfigEntries.get(0) == null)
+        if (Objects.requireNonNull(jaasConfigEntries).size() < 1 || jaasConfigEntries.get(0) == null)
             throw new IllegalArgumentException(
                     String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
                             jaasConfigEntries.size()));
@@ -74,13 +70,13 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
 
         log.debug("Trying to acquire IMS Token");
 
-        IMSBearerTokenJwt token = IMSHttpCalls.getIMSToken();
+        IMSBearerTokenJwt token = IMSHttpCalls.getIMSToken(moduleOptions);
 
         if(token == null){
             throw new IllegalArgumentException("Null token returned from server");
         }
 
-        log.debug("Retrieved IMS Token");
+        log.debug("Retrieved IMS Token: " + token);
         callback.token(token);
     }
 
