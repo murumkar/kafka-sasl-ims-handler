@@ -1,12 +1,3 @@
-/*
- * ADOBE CONFIDENTIAL. Copyright 2018 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
- * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
- * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
- * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
- * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
- * from Adobe Systems Incorporated.
- */
-
 package com.manoj.security;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,7 +28,7 @@ public class IMSHttpCalls {
 
     private static Time time = Time.SYSTEM;
 
-    public static IMSBearerTokenJwt getIMSToken(Map<String,String> configOptions) {
+    public static IMSBearerTokenJwt getIMSToken(Map < String, String > configOptions) {
         IMSBearerTokenJwt result = null;
         try {
             long callTimeMs = System.currentTimeMillis();
@@ -53,15 +44,15 @@ public class IMSHttpCalls {
             log.debug("Trying to login with IMS");
             log.debug("Request URL: " + tokenUrl + "?" + postDataStr);
 
-            Map<String, Object> resp = null;
+            Map < String, Object > resp = null;
 
-            resp = postRequest(tokenUrl , postDataStr);
+            resp = postRequest(tokenUrl, postDataStr);
 
             //for (Map.Entry entry : resp.entrySet()) {
-                //log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
+            //log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
             //}
 
-            if(resp != null){
+            if (resp != null) {
 
                 String accessToken = (String) resp.get("access_token");
                 long expiresInMs = ((Integer) resp.get("expires_in")).longValue();
@@ -70,14 +61,14 @@ public class IMSHttpCalls {
 
                 try {
                     result = new IMSBearerTokenJwt(accessToken, expiresInMs, callTimeMs);
-
-                    log.debug("JWT: " + result.toString());
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
             } else {
+
                 throw new Exception("Response NULL at getIMSToken");
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,7 +76,7 @@ public class IMSHttpCalls {
         return result;
     }
 
-    public static IMSBearerTokenJwt validateIMSToken(String accessToken, Map<String,String> configOptions) {
+    public static IMSBearerTokenJwt validateIMSToken(String accessToken, Map < String, String > configOptions) {
 
         IMSBearerTokenJwt result = null;
 
@@ -101,33 +92,27 @@ public class IMSHttpCalls {
             String postDataStr = token + "&" + clientID + "&" + type;
 
             String validationUrl = (String) getConfigOptionOrEnvironment("ims.token.validation.url", configOptions, IMS_TOKEN_VALIDATION_URL);
-            log.debug("Trying to validate token with IMS with URL: " + validationUrl + "?" + postDataStr);
+            log.debug("Trying to validate token with IMS with URL: {}?{}", validationUrl, postDataStr);
 
-            Map<String, Object> resp = null;
-            Map<String, Object> tokenJson = null;
+            Map < String, Object > resp = null;
+            Map < String, Object > tokenJson = null;
 
             resp = postRequest(validationUrl, postDataStr);
 
-            //for (Map.Entry entry : resp.entrySet()) {
-                //log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
-            //}
-
             if (resp != null) {
                 if ((boolean) resp.get("valid")) {
-
-                    // Extract the token and convert it to a Map<String, Object>
+                    //Extract the token and convert it to a Map<String, Object>
                     ObjectMapper oMapper = new ObjectMapper();
                     tokenJson = oMapper.convertValue(resp.get("token"), Map.class);
 
                     result = new IMSBearerTokenJwt(tokenJson, accessToken);
-                    log.debug("Token is Valid! Token: " + result);
-
+                    log.debug("Token is Valid!");
                 } else {
                     throw new Exception("Invalid IMS Token!");
                 }
             }
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
@@ -142,14 +127,14 @@ public class IMSHttpCalls {
 
         String payLoad = new String(decoder.decode(tokenString[1]));
 
-        Map<String, String> bodyItems = new HashMap<String, String>();
+        Map < String, String > bodyItems = new HashMap < String, String > ();
         String[] pairs = payLoad.split("\",\"");
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String,Object>>(){});
+            Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference < Map < String, Object >> () {});
             clientID = (String) payloadJson.get("client_id");
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -158,10 +143,10 @@ public class IMSHttpCalls {
     }
 
 
-    private static Map<String, Object> postRequest(String urlStr, String postParameters){
-        try{
+    private static Map < String, Object > postRequest(String urlStr, String postParameters) {
+        try {
 
-            byte[] postData = postParameters.getBytes( StandardCharsets.UTF_8 );
+            byte[] postData = postParameters.getBytes(StandardCharsets.UTF_8);
             int postDataLength = postData.length;
 
             URL url = new URL(urlStr);
@@ -174,17 +159,17 @@ public class IMSHttpCalls {
             con.setUseCaches(false);
             con.setDoOutput(true);
 
-            try(DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-                wr.write( postData );
+            try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+                wr.write(postData);
             }
 
             int responseCode = con.getResponseCode();
             if (responseCode == 200) {
                 return handleJsonResponse(con.getInputStream());
-            }else {
+            } else {
                 throw new Exception("Return code " + responseCode);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("at postRequest");
         }
         return null;
@@ -193,50 +178,49 @@ public class IMSHttpCalls {
     private static Object getEnvironmentVariables(String envName, Object defaultValue) {
         Object result = null;
         String env = System.getenv(envName);
-        if(env == null){
+        if (env == null) {
             result = defaultValue;
-        }else{
-            if(defaultValue instanceof Boolean){
+        } else {
+            if (defaultValue instanceof Boolean) {
                 result = Boolean.valueOf(env);
-            }else if(defaultValue instanceof Integer){
+            } else if (defaultValue instanceof Integer) {
                 result = Integer.valueOf(env);
-            }else if(defaultValue instanceof Double){
+            } else if (defaultValue instanceof Double) {
                 result = Double.valueOf(env);
-            }else if(defaultValue instanceof Float){
+            } else if (defaultValue instanceof Float) {
                 result = Float.valueOf(env);
-            }else{
+            } else {
                 result = env;
             }
         }
         return result;
     }
 
-    private static Object getConfigOptionOrEnvironment(String attribute, Map<String, String> configOptions, String environment){
-        if(configOptions != null){
-            if(configOptions.get(attribute) != null){
+    private static Object getConfigOptionOrEnvironment(String attribute, Map < String, String > configOptions, String environment) {
+        if (configOptions != null) {
+            if (configOptions.get(attribute) != null) {
                 return configOptions.get(attribute);
             }
         }
         return environment;
     }
 
-    private static Map<String,Object> handleJsonResponse(InputStream inputStream){
-        Map<String, Object> result = null;
-        try{
+    private static Map < String, Object > handleJsonResponse(InputStream inputStream) {
+        Map < String, Object > result = null;
+        try {
             BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
             String inputLine;
             StringBuffer response = new StringBuffer();
 
-            while ((inputLine = in.readLine()) != null) {
+            while ((inputLine = in .readLine()) != null) {
                 response.append(inputLine);
-            }
-            in.close();
+            } in .close();
 
             String jsonResponse = response.toString();
             ObjectMapper objectMapper = new ObjectMapper();
-            result = objectMapper.readValue(jsonResponse, new TypeReference<Map<String,Object>>(){});
+            result = objectMapper.readValue(jsonResponse, new TypeReference < Map < String, Object >> () {});
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return result;

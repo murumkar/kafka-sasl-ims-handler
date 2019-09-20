@@ -1,12 +1,3 @@
-/*
- * ADOBE CONFIDENTIAL. Copyright 2018 Adobe Systems Incorporated. All Rights Reserved. NOTICE: All information contained
- * herein is, and remains the property of Adobe Systems Incorporated and its suppliers, if any. The intellectual and
- * technical concepts contained herein are proprietary to Adobe Systems Incorporated and its suppliers and are protected
- * by all applicable intellectual property laws, including trade secret and copyright law. Dissemination of this
- * information or reproduction of this material is strictly forbidden unless prior written permission is obtained
- * from Adobe Systems Incorporated.
- */
-
 package com.manoj.security;
 
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerToken;
@@ -27,11 +18,11 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
     private String principalName;
     private Long startTimeMs;
     private long lifetimeMs;
-    private Set<String> scope;
+    private Set < String > scope;
     private Long expirationTime;
 
 
-    public IMSBearerTokenJwt(String accessToken, long lifeTime, long startTime){
+    public IMSBearerTokenJwt(String accessToken, long lifeTime, long startTime) {
         super();
         this.value = accessToken;
         this.principalName = null;
@@ -40,23 +31,19 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         this.expirationTime = lifetimeMs;
     }
 
-    public IMSBearerTokenJwt(Map<String, Object> jwtToken, String accessToken){
+    public IMSBearerTokenJwt(Map < String, Object > jwtToken, String accessToken) {
         super();
         this.value = accessToken;
-        this.principalName = (String) jwtToken.get("user_id");
+        this.principalName = (String) jwtToken.get("client_id");
 
-        //for (Map.Entry entry : jwtToken.entrySet()) {
-            //log.debug("jwtToken key: " + entry.getKey() + "; jwtToken value: " + entry.getValue());
-        //}
-
-        if(this.scope == null){
-            this.scope = new TreeSet<>();
+        if (this.scope == null) {
+            this.scope = new TreeSet < > ();
         }
 
-        if(jwtToken.get("scope") instanceof String ){
+        if (jwtToken.get("scope") instanceof String) {
             this.scope.add((String) jwtToken.get("scope"));
-        }else if(jwtToken.get("scope") instanceof List){
-            for(String s : (List<String>) jwtToken.get("scope")){
+        } else if (jwtToken.get("scope") instanceof List) {
+            for (String s: (List < String > ) jwtToken.get("scope")) {
                 this.scope.add(s);
             }
         }
@@ -67,7 +54,6 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         this.startTimeMs = creationTimeMs;
         this.lifetimeMs = expiresInMs;
         this.expirationTime = creationTimeMs + expiresInMs;
-
     }
 
     @Override
@@ -76,7 +62,7 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
     }
 
     @Override
-    public Set<String> scope() {
+    public Set < String > scope() {
         return scope;
     }
 
@@ -95,19 +81,20 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         return startTimeMs != null ? startTimeMs : 0;
     }
 
-    public long expirationTime() {  return expirationTime != null ? expirationTime : 0; }
+    public long expirationTime() {
+        return expirationTime != null ? expirationTime : 0;
+    }
 
-   /** @Override
+    @Override
     public String toString() {
         return "IMSBearerTokenJwt{" +
                 "value='" + value + '\'' +
                 ", lifetimeMs=" + lifetimeMs +
                 ", principalName='" + principalName + '\'' +
                 ", startTimeMs=" + startTimeMs +
-                ", scope=" + scope +
+                ", scope=" + scope() +
                 ", expirationTime=" + expirationTime +
                 '}';
     }
-   */
 
 }
