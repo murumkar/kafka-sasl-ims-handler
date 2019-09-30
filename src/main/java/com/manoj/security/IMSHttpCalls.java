@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Base64;
 
+import java.util.stream.Collectors;
+
 public class IMSHttpCalls {
 
     private static final Logger log = LoggerFactory.getLogger(IMSHttpCalls.class);
@@ -41,19 +43,14 @@ public class IMSHttpCalls {
             String postDataStr = grantType + "&" + clientID + "&" + clientSecret + "&" + clientCode;
 
             String tokenUrl = (String) getConfigOptionOrEnvironment("ims.token.url", configOptions, IMS_TOKEN_URL);
-            log.debug("Trying to login with IMS");
+            log.debug("Trying to get AccessToken from IMS");
             log.debug("Request URL: " + tokenUrl + "?" + postDataStr);
 
             Map < String, Object > resp = null;
 
             resp = postRequest(tokenUrl, postDataStr);
 
-            //for (Map.Entry entry : resp.entrySet()) {
-            //log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
-            //}
-
             if (resp != null) {
-
                 String accessToken = (String) resp.get("access_token");
                 long expiresInMs = ((Integer) resp.get("expires_in")).longValue();
 
@@ -64,11 +61,8 @@ public class IMSHttpCalls {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             } else {
-
                 throw new Exception("Response NULL at getIMSToken");
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,14 +137,18 @@ public class IMSHttpCalls {
     }
 
 
-    private static Map < String, Object > postRequest(String urlStr, String postParameters) {
+    private static Map < String, Object > postRequest(String urlStr, String postParameters)
+            throws IMSException {
+
+        HttpsURLConnection con = null;
+        byte[] postData = postParameters.getBytes(StandardCharsets.UTF_8);
+        int postDataLength = postData.length;
+        BufferedReader br = null;
+        int responseCode = 200;
+
         try {
-
-            byte[] postData = postParameters.getBytes(StandardCharsets.UTF_8);
-            int postDataLength = postData.length;
-
             URL url = new URL(urlStr);
-            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+            con = (HttpsURLConnection) url.openConnection();
             con.setInstanceFollowRedirects(true);
             con.setRequestMethod("POST");
             con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -162,17 +160,18 @@ public class IMSHttpCalls {
             try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
                 wr.write(postData);
             }
+            responseCode = con.getResponseCode();
 
-            int responseCode = con.getResponseCode();
-            if (responseCode == 200) {
+            if (200 <= responseCode && responseCode <= 299) {
                 return handleJsonResponse(con.getInputStream());
-            } else {
-                throw new Exception("Return code " + responseCode);
             }
         } catch (Exception e) {
-            log.error("at postRequest");
+                log.error("Exception: {} " + responseCode);
         }
-        return null;
+        br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+        String responseMessage = br.lines().collect(Collectors.joining());
+        throw new IMSException(responseCode, responseMessage);
+
     }
 
     private static Object getEnvironmentVariables(String envName, Object defaultValue) {
