@@ -27,12 +27,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
     private Time time = Time.SYSTEM;
 
     //Allowed scopes
-    private static final String GLOBAL_SCOPE = "Global";
-    private static final String APP_SCOPE = "MyAppScope";
-    private static final String[] ALLOWED_SCOPES = new String[] {
-            GLOBAL_SCOPE,
-            APP_SCOPE
-    };
+    private static final String DIM_CORE_SCOPE = "dim.core.services";
 
     @Override
     public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
@@ -76,8 +71,6 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         if (accessToken == null)
             throw new IllegalArgumentException("Callback missing required token value");
 
-        log.debug("Validating IMS Token");
-
         IMSBearerTokenJwt token = IMSHttpCalls.validateIMSToken(accessToken, moduleOptions);
 
         //Check if Token has expired
@@ -85,27 +78,18 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
 
         log.debug("Token expiration time: {}", token.expirationTime());
 
-        if (now > token.expirationTime()) {
+        if (now > token.lifetimeMs()) {
             log.debug("Token has expired! Needs refresh");
             OAuthBearerValidationResult.newFailure("Expired Token").throwExceptionIfFailed();
         }
 
         //Check if we have DIM specific scope in the token or not
-        String scopes = token.scope().toString().replaceAll("[\\[\\]]", "");
-        log.debug("Token has following scopes: " + scopes);
-        List < String > scopesList = Arrays.asList(scopes.split("\\s*,\\s*"));
+        Set<String> scopes = token.scope();
 
-        boolean scopeCheckPass = false;
-        for (String scope: ALLOWED_SCOPES) {
-            if (scopesList.contains(scope)) {
-                log.debug("Found valid scope: {}", scope);
-                scopeCheckPass = true;
-            }
-        }
-
-        if (!scopeCheckPass) {
-            log.debug("Token doesn't have any of required scopes! We cannot accept this token");
-            log.debug("Required scopes are one of the following: {}", Arrays.toString(ALLOWED_SCOPES));
+        if (!scopes.contains(DIM_CORE_SCOPE)) {
+            log.debug("Token doesn't have required scopes! We cannot accept this token");
+            log.debug("Required scope is: {}", DIM_CORE_SCOPE);
+            log.debug("Token has following scopes: {}", scopes);
             OAuthBearerValidationResult.newFailure("Required scope missing").throwExceptionIfFailed();
         }
 

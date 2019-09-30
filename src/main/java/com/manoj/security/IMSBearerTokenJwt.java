@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +20,6 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
     private Long startTimeMs;
     private long lifetimeMs;
     private Set < String > scope;
-    private Long expirationTime;
-
 
     public IMSBearerTokenJwt(String accessToken, long lifeTime, long startTime) {
         super();
@@ -28,7 +27,6 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         this.principalName = null;
         this.startTimeMs = startTime;
         this.lifetimeMs = startTimeMs + lifeTime;
-        this.expirationTime = lifetimeMs;
     }
 
     public IMSBearerTokenJwt(Map < String, Object > jwtToken, String accessToken) {
@@ -41,7 +39,11 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         }
 
         if (jwtToken.get("scope") instanceof String) {
-            this.scope.add((String) jwtToken.get("scope"));
+            //IMS scopes come in the form of a comma separated string
+            List<String> scopesList = Arrays.asList(jwtToken.get("scope").toString().split("\\s*,\\s*"));
+            for (String s: (List < String > ) scopesList) {
+                this.scope.add(s);
+            }
         } else if (jwtToken.get("scope") instanceof List) {
             for (String s: (List < String > ) jwtToken.get("scope")) {
                 this.scope.add(s);
@@ -52,8 +54,7 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         long creationTimeMs = Long.parseLong((String) jwtToken.get("created_at"));
 
         this.startTimeMs = creationTimeMs;
-        this.lifetimeMs = expiresInMs;
-        this.expirationTime = creationTimeMs + expiresInMs;
+        this.lifetimeMs = creationTimeMs + expiresInMs;
     }
 
     @Override
@@ -81,10 +82,6 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
         return startTimeMs != null ? startTimeMs : 0;
     }
 
-    public long expirationTime() {
-        return expirationTime != null ? expirationTime : 0;
-    }
-
     @Override
     public String toString() {
         return "IMSBearerTokenJwt{" +
@@ -93,7 +90,6 @@ public class IMSBearerTokenJwt implements OAuthBearerToken {
                 ", principalName='" + principalName + '\'' +
                 ", startTimeMs=" + startTimeMs +
                 ", scope=" + scope() +
-                ", expirationTime=" + expirationTime +
                 '}';
     }
 

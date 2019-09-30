@@ -42,6 +42,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         if (!isConfigured())
             throw new IllegalStateException("Callback handler not configured");
+
         for (Callback callback: callbacks) {
             if (callback instanceof OAuthBearerTokenCallback)
                 try {
@@ -58,10 +59,7 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
         if (callback.token() != null)
             throw new IllegalArgumentException("Callback had a token already");
 
-        log.debug("Trying to acquire IMS Token");
-
         IMSBearerTokenJwt token = IMSHttpCalls.getIMSToken(moduleOptions);
-
         if (token == null) {
             throw new IllegalArgumentException("Null token returned from server");
         }
