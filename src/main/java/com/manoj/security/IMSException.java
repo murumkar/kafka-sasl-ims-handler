@@ -1,4 +1,4 @@
-package com.adobe.ids.dim.security;
+package com.manoj.security;
 
 import org.apache.kafka.common.protocol.types.Field;
 
