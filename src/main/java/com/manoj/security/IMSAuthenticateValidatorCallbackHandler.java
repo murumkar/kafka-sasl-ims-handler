@@ -76,7 +76,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         //Check if Token has expired
         long now = time.milliseconds();
 
-        log.debug("Token expiration time: {}", token.expirationTime());
+        log.debug("Token expiration time: {}", token.token.lifetimeMs());
 
         if (now > token.lifetimeMs()) {
             log.debug("Token has expired! Needs refresh");
